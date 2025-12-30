@@ -1,0 +1,948 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ACHYUT HEYGRIV | SYSTEMS ARCHITECT</title>
+    
+    <link rel="apple-touch-icon" sizes="180x180" href="https://i.ibb.co/27b0x5h4/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="https://i.ibb.co/JRt4JtdY/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="https://i.ibb.co/gMYCz8Mr/favicon-16x16.png">
+    <link rel="manifest" href="site.webmanifest">
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;700&family=Rajdhani:wght@400;600;700&family=Syncopate:wght@400;700&display=swap" rel="stylesheet">
+    
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Tailwind Config -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        cyber: {
+                            black: '#020204',
+                            dark: '#0a0a0f',
+                            cyan: '#00f3ff',
+                            purple: '#bd00ff',
+                            red: '#ff2a2a',
+                            glass: 'rgba(10, 10, 15, 0.65)'
+                        }
+                    },
+                    fontFamily: {
+                        display: ['Syncopate', 'sans-serif'],
+                        tech: ['Rajdhani', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                    backgroundImage: {
+                        'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Custom CSS -->
+    <style>
+        /* Base Reset */
+        body {
+            background-color: #020204;
+            color: #e0e0e0;
+            overflow-x: hidden;
+            cursor: none; /* Hide default cursor */
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #020204; }
+        ::-webkit-scrollbar-thumb { background: #00f3ff; border-radius: 3px; }
+
+        /* Typography & Effects */
+        .text-glow { text-shadow: 0 0 10px rgba(0, 243, 255, 0.5); }
+        .text-glow-red { text-shadow: 0 0 10px rgba(255, 42, 42, 0.5); }
+        
+        .glass-panel {
+            background: var(--cyber-glass);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Glitch Animation */
+        .glitch-wrapper { position: relative; display: inline-block; }
+        .glitch-wrapper::before, .glitch-wrapper::after {
+            content: attr(data-text); position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0.8;
+        }
+        .glitch-wrapper::before { color: #ff2a2a; z-index: -1; animation: glitch-anim-1 2s infinite linear alternate-reverse; }
+        .glitch-wrapper::after { color: #00f3ff; z-index: -2; animation: glitch-anim-2 2s infinite linear alternate-reverse; }
+
+        @keyframes glitch-anim-1 {
+            0% { clip-path: inset(20% 0 80% 0); transform: translate(-2px, 1px); }
+            100% { clip-path: inset(60% 0 10% 0); transform: translate(2px, -1px); }
+        }
+        @keyframes glitch-anim-2 {
+            0% { clip-path: inset(10% 0 50% 0); transform: translate(2px, -1px); }
+            100% { clip-path: inset(80% 0 5% 0); transform: translate(-2px, 1px); }
+        }
+
+        /* Loading Screen */
+        #loader {
+            position: fixed; inset: 0; background: #020204; z-index: 10000;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+        }
+        .loader-bar { width: 300px; height: 2px; background: #333; margin-top: 20px; overflow: hidden; position: relative; }
+        .loader-progress { width: 0%; height: 100%; background: #00f3ff; position: absolute; left: 0; box-shadow: 0 0 10px #00f3ff; }
+
+        /* Utility Classes */
+        .clip-corner { clip-path: polygon(0 0, 100% 0, 100% 85%, 95% 100%, 0 100%); }
+        .card-hover:hover { border-color: #00f3ff; box-shadow: 0 0 15px rgba(0, 243, 255, 0.2); }
+    </style>
+</head>
+<body class="antialiased selection:bg-cyber-cyan selection:text-black">
+
+    <!-- NEW RIBBON CURSOR CONTAINER -->
+    <div id="ribbon-container" class="fixed top-0 left-0 w-full h-full pointer-events-none z-[9999]"></div>
+
+    <!-- LOADING SCREEN -->
+    <div id="loader">
+        <div class="font-display font-bold text-4xl text-white glitch-wrapper" data-text="INITIALIZING SYSTEM">
+            INITIALIZING SYSTEM
+        </div>
+        <div class="loader-bar">
+            <div class="loader-progress" id="progress-bar"></div>
+        </div>
+        <div class="font-mono text-cyber-cyan text-sm mt-4">
+            <span id="loader-text">LOADING ASSETS...</span>
+        </div>
+    </div>
+
+    <!-- BACKGROUND CANVAS -->
+    <canvas id="webgl-canvas" class="fixed top-0 left-0 w-full h-full -z-10 opacity-60"></canvas>
+    
+    <!-- GRID OVERLAY (Decorative) -->
+    <div class="fixed top-0 left-0 w-full h-full -z-1 pointer-events-none opacity-20" 
+         style="background-image: linear-gradient(#00f3ff 1px, transparent 1px), linear-gradient(90deg, #00f3ff 1px, transparent 1px); background-size: 50px 50px; mask-image: radial-gradient(circle, black 40%, transparent 80%);">
+    </div>
+
+    <!-- NAVIGATION -->
+    <nav class="fixed top-0 w-full z-50 border-b border-white/10 glass-panel">
+        <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+            <a href="#" class="font-display font-bold text-xl tracking-widest text-white hover:text-cyber-cyan transition-colors">
+                ACHYUT<span class="text-cyber-cyan">.DEV</span>
+            </a>
+            
+            <!-- Desktop Nav -->
+            <div class="hidden md:flex space-x-8 font-mono text-sm tracking-wider">
+                <a href="#about" class="nav-link text-gray-400 hover:text-cyber-cyan transition-colors relative group">
+                    <span class="text-cyber-cyan mr-1">01.</span>PROFILE
+                    <span class="absolute -bottom-2 left-0 w-0 h-[2px] bg-cyber-cyan transition-all group-hover:w-full"></span>
+                </a>
+                <a href="#education" class="nav-link text-gray-400 hover:text-cyber-cyan transition-colors relative group">
+                    <span class="text-cyber-cyan mr-1">02.</span>EDUCATION
+                    <span class="absolute -bottom-2 left-0 w-0 h-[2px] bg-cyber-cyan transition-all group-hover:w-full"></span>
+                </a>
+                <a href="#projects" class="nav-link text-gray-400 hover:text-cyber-cyan transition-colors relative group">
+                    <span class="text-cyber-cyan mr-1">03.</span>PROJECTS
+                    <span class="absolute -bottom-2 left-0 w-0 h-[2px] bg-cyber-cyan transition-all group-hover:w-full"></span>
+                </a>
+                <a href="#certifications" class="nav-link text-gray-400 hover:text-cyber-cyan transition-colors relative group">
+                    <span class="text-cyber-cyan mr-1">04.</span>CERTIFICATIONS
+                    <span class="absolute -bottom-2 left-0 w-0 h-[2px] bg-cyber-cyan transition-all group-hover:w-full"></span>
+                </a>
+            </div>
+
+            <!-- Mobile Menu Btn -->
+            <button class="md:hidden text-white text-xl" onclick="window.toggleMobileNav()">
+                <i class="fas fa-bars"></i>
+            </button>
+        </div>
+    </nav>
+
+    <!-- MAIN CONTENT WRAPPER -->
+    <main class="relative z-10 pt-20">
+
+        <!-- HERO SECTION -->
+        <section id="home" class="min-h-screen flex items-center justify-center relative px-6">
+            <div class="max-w-6xl w-full grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+                
+                <!-- Hero Text -->
+                <div class="order-2 lg:order-1 space-y-6">
+                    <div class="inline-block px-3 py-1 border border-cyber-cyan/30 rounded-full bg-cyber-cyan/10">
+                        <span class="font-mono text-cyber-cyan text-xs tracking-widest">● SYSTEM ONLINE</span>
+                    </div>
+                    
+                    <h1 class="font-display text-5xl md:text-7xl font-bold text-white leading-tight">
+                        ACHYUT <br>
+                        <span class="text-transparent bg-clip-text bg-gradient-to-r from-cyber-cyan to-blue-600 glitch-wrapper" data-text="HEYGRIV">HEYGRIV</span>
+                    </h1>
+                    
+                    <div class="h-16"> <!-- Fixed height for typing to prevent layout shift -->
+                        <!-- UPDATED STATIC TEXT HERE -->
+                        <p class="font-tech text-xl md:text-2xl text-gray-400 border-l-2 border-cyber-cyan pl-4">
+                            I am highly interested in <span id="typing-text" class="text-white font-bold"></span><span class="animate-pulse">|</span>
+                        </p>
+                    </div>
+
+                    <p class="font-mono text-sm text-gray-500 max-w-md leading-relaxed">
+                        Innovative Engineering Student adept at utilizing cutting-edge AI tools to streamline processes, solve complex problems, and ensure fast, accurate work.
+                    </p>
+
+                    <div class="flex gap-6 pt-4">
+                        <a href="https://linkedin.com/in/achyut-heygriv-acprime" target="_blank" class="w-12 h-12 rounded-full border border-gray-700 flex items-center justify-center text-gray-400 hover:bg-cyber-cyan hover:text-black hover:border-cyber-cyan transition-all duration-300">
+                            <i class="fab fa-linkedin-in text-lg"></i>
+                        </a>
+                        <a href="https://github.com/ACprime438" target="_blank" class="w-12 h-12 rounded-full border border-gray-700 flex items-center justify-center text-gray-400 hover:bg-cyber-cyan hover:text-black hover:border-cyber-cyan transition-all duration-300">
+                            <i class="fab fa-github text-lg"></i>
+                        </a>
+                        <a href="#projects" class="px-8 h-12 flex items-center border border-cyber-cyan text-cyber-cyan font-mono text-sm font-bold tracking-widest hover:bg-cyber-cyan hover:text-black transition-all duration-300 clip-corner">
+                            VIEW MODULES
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Hero Visual (3D Target) -->
+                <div class="order-1 lg:order-2 flex justify-center lg:justify-end relative w-full">
+                    
+                    <!-- FLUID CIRCLE CONTAINER -->
+                    <div class="w-full max-w-[350px] md:max-w-[500px] aspect-square rounded-full border border-white/5 bg-cyber-black/20 backdrop-blur-sm flex items-center justify-center relative animate-pulse-slow">
+                        
+                        <!-- Spinning Rings -->
+                        <div class="absolute inset-0 border border-cyber-cyan/20 rounded-full animate-spin-slow" style="border-style: dashed;"></div>
+                        <div class="absolute w-[80%] h-[80%] border border-cyber-purple/20 rounded-full animate-reverse-spin"></div>
+                        
+                        <!-- YOUR IMAGE PLACEHOLDER -->
+                        <img src="https://i.ibb.co/M5D10dc3/AChyut-gemini-created.png" 
+                             alt="Achyut" 
+                             class="w-[85%] h-[85%] object-cover rounded-full relative z-10 opacity-90 hover:opacity-100 transition-opacity">
+                    </div>
+                    
+                    <!-- Floating Data Card -->
+                    <div class="absolute bottom-10 right-0 glass-panel p-4 rounded-sm border-l-2 border-cyber-cyan max-w-[200px] hidden md:block">
+                        <div class="font-mono text-[10px] text-gray-500 mb-1">STATUS</div>
+                        <div class="font-tech text-white text-sm">AVAILABLE FOR HIRE</div>
+                        <div class="w-full bg-gray-800 h-1 mt-2 overflow-hidden">
+                            <div class="h-full bg-green-500 w-[85%] animate-pulse"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ABOUT & SKILLS SECTION -->
+        <section id="about" class="py-24 px-6 relative">
+            <div class="max-w-7xl mx-auto">
+                <div class="flex flex-col md:flex-row gap-4 items-end mb-16 border-b border-gray-800 pb-4">
+                    <h2 class="font-display text-4xl md:text-5xl text-white">PROFILE<span class="text-cyber-cyan">.LOG</span></h2>
+                    <span class="font-mono text-cyber-cyan mb-2">01 // ABOUT ME</span>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-12">
+                    <!-- About Text -->
+                    <div class="lg:col-span-7 space-y-8">
+                        <div class="glass-panel p-8 rounded-lg relative overflow-hidden group">
+                            <div class="absolute top-0 right-0 p-4 opacity-20 group-hover:opacity-100 transition-opacity">
+                                <i class="fas fa-fingerprint text-6xl text-cyber-cyan"></i>
+                            </div>
+                            
+                            <!-- UPDATED PROFILE TITLE -->
+                            <h3 class="font-display text-2xl text-white mb-4">ELECTRONICS & COMMUNICATION ENGINEER</h3>
+                            <p class="font-tech text-xl text-gray-300 leading-relaxed mb-4">
+                                I am a results-oriented Electronics and Communications Engineer adept at utilizing cutting-edge AI tools to streamline processes, solve complex problems, and ensure fast, accurate work.
+                            </p>
+                            <p class="font-mono text-sm text-gray-500 leading-relaxed">
+                                My focus lies in bridging the gap between hardware logic and intelligent software. Whether it's designing autonomous systems, optimizing embedded architectures, or developing strategic innovation frameworks, I bring a meticulous, data-driven approach to every project.
+                            </p>
+                            
+                            <!-- RESUME LINK -->
+                            <a href="Resume.pdf" target="_blank" class="inline-flex items-center gap-2 mt-8 text-cyber-cyan hover:text-white transition-colors font-mono text-sm border-b border-cyber-cyan pb-1">
+                                <i class="fas fa-download"></i> DOWNLOAD DATASHEET (RESUME)
+                            </a>
+                        </div>
+
+                        <!-- INTERESTS SECTION -->
+                        <div class="space-y-4">
+                            <h3 class="font-display text-lg text-white">CORE INTERESTS</h3>
+                            <div class="flex flex-wrap gap-3">
+                                <div class="px-4 py-2 border border-cyber-cyan/30 bg-cyber-cyan/5 rounded text-sm text-cyber-cyan font-mono hover:bg-cyber-cyan hover:text-black transition-colors">
+                                    <i class="fas fa-robot mr-2"></i>Robotics & Automation
+                                </div>
+                                <div class="px-4 py-2 border border-cyber-purple/30 bg-cyber-purple/5 rounded text-sm text-cyber-purple font-mono hover:bg-cyber-purple hover:text-black transition-colors">
+                                    <i class="fas fa-brain mr-2"></i>AI Agents & Tools
+                                </div>
+                                <div class="px-4 py-2 border border-blue-500/30 bg-blue-500/5 rounded text-sm text-blue-400 font-mono hover:bg-blue-500 hover:text-black transition-colors">
+                                    <i class="fas fa-wifi mr-2"></i>IoT Systems
+                                </div>
+                                <div class="px-4 py-2 border border-orange-500/30 bg-orange-500/5 rounded text-sm text-orange-400 font-mono hover:bg-orange-500 hover:text-black transition-colors">
+                                    <i class="fas fa-plane mr-2"></i>Automotive & Aerospace
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Skills & Secondary Image -->
+                    <div class="lg:col-span-5 flex flex-col gap-8">
+                        <!-- Technical Skills Grid -->
+                        <div class="glass-panel p-6 rounded-lg">
+                            <h3 class="font-display text-lg text-white mb-4">TECHNICAL ARSENAL</h3>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div class="flex items-center gap-3 text-gray-400 hover:text-yellow-400 transition-colors">
+                                    <i class="fab fa-python text-xl"></i> <span class="font-mono text-xs">PYTHON</span>
+                                </div>
+                                <div class="flex items-center gap-3 text-gray-400 hover:text-cyber-cyan transition-colors">
+                                    <i class="fas fa-microchip text-xl"></i> <span class="font-mono text-xs">EMBEDDED C</span>
+                                </div>
+                                <div class="flex items-center gap-3 text-gray-400 hover:text-green-400 transition-colors">
+                                    <i class="fas fa-robot text-xl"></i> <span class="font-mono text-xs">ARDUINO</span>
+                                </div>
+                                <div class="flex items-center gap-3 text-gray-400 hover:text-red-500 transition-colors">
+                                    <i class="fab fa-raspberry-pi text-xl"></i> <span class="font-mono text-xs">RASPBERRY PI</span>
+                                </div>
+                                <div class="flex items-center gap-3 text-gray-400 hover:text-purple-400 transition-colors">
+                                    <i class="fas fa-brain text-xl"></i> <span class="font-mono text-xs">GEN AI & LLMs</span>
+                                </div>
+                                <div class="flex items-center gap-3 text-gray-400 hover:text-blue-400 transition-colors">
+                                    <i class="fas fa-network-wired text-xl"></i> <span class="font-mono text-xs">IoT ARCH.</span>
+                                </div>
+                            </div>
+                        </div>
+
+                         <!-- Secondary Image Container -->
+                        <div class="relative w-full h-64 rounded-lg overflow-hidden border border-gray-800 group">
+                            <div class="absolute inset-0 bg-cyber-cyan/10 group-hover:bg-transparent transition-colors z-10"></div>
+                            <img src="https://i.ibb.co/DgsZ1QJf/Chat-GPT-Image-Dec-30-2025-12-59-23-PM.png" 
+                                 alt="Workspace" 
+                                 class="w-full h-full object-cover opacity-60 group-hover:opacity-100 transition-opacity duration-500 grayscale group-hover:grayscale-0">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- EDUCATION TIMELINE -->
+        <section id="education" class="py-24 px-6 bg-cyber-dark/50 border-y border-white/5">
+            <div class="max-w-5xl mx-auto">
+                <div class="flex flex-col md:flex-row gap-4 items-end mb-16">
+                    <h2 class="font-display text-4xl text-white">EDUCATION<span class="text-cyber-cyan">.PATH</span></h2>
+                    <span class="font-mono text-cyber-cyan mb-2">02 // ACADEMIC HISTORY</span>
+                </div>
+
+                <div class="relative border-l border-gray-800 ml-4 md:ml-12 space-y-12">
+                    
+                    <!-- Edu Item 1 -->
+                    <div class="relative pl-8 md:pl-12 group">
+                        <!-- Dot -->
+                        <div class="absolute -left-[5px] top-2 w-2.5 h-2.5 bg-cyber-black border border-cyber-cyan rounded-full group-hover:bg-cyber-cyan transition-colors shadow-[0_0_10px_rgba(0,243,255,0.5)]"></div>
+                        
+                        <div class="glass-panel p-6 rounded-r-lg border-l-4 border-l-cyber-cyan transform transition-transform duration-300 group-hover:translate-x-2">
+                            <div class="flex justify-between items-start flex-wrap gap-2">
+                                <div>
+                                    <h3 class="font-display text-xl text-white">B.Tech - Electronics & Communication</h3>
+                                    <p class="font-tech text-lg text-gray-400 mt-1">Christu Jyothi Institute of Technology and Science</p>
+                                </div>
+                                <span class="font-mono text-xs bg-cyber-cyan/10 text-cyber-cyan px-2 py-1 rounded border border-cyber-cyan/20">2022 - 2026</span>
+                            </div>
+                            <p class="mt-4 font-mono text-sm text-gray-500">Focusing on Embedded Systems, Signal Processing, and VLSI Design.</p>
+                        </div>
+                    </div>
+
+                    <!-- Edu Item 2 -->
+                    <div class="relative pl-8 md:pl-12 group">
+                        <div class="absolute -left-[5px] top-2 w-2.5 h-2.5 bg-cyber-black border border-gray-600 rounded-full group-hover:border-cyber-purple group-hover:bg-cyber-purple transition-colors"></div>
+                        
+                        <div class="glass-panel p-6 rounded-r-lg border-l-4 border-l-gray-700 group-hover:border-l-cyber-purple transform transition-transform duration-300 group-hover:translate-x-2">
+                            <div class="flex justify-between items-start flex-wrap gap-2">
+                                <div>
+                                    <h3 class="font-display text-xl text-white">Intermediate (MPC)</h3>
+                                    <p class="font-tech text-lg text-gray-400 mt-1">Sri Chaitanya College of Education</p>
+                                </div>
+                                <span class="font-mono text-xs bg-gray-800 text-gray-400 px-2 py-1 rounded border border-gray-700">Completed 2022</span>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+    <!-- ================= PROJECTS SECTION START ================= -->
+        <section id="projects" class="py-24 px-6 relative overflow-hidden">
+            <!-- Background Decoration -->
+            <div class="absolute top-1/4 right-0 w-96 h-96 bg-cyber-cyan/5 rounded-full blur-3xl -z-10"></div>
+
+            <div class="max-w-7xl mx-auto">
+                <div class="flex flex-col md:flex-row gap-4 items-end mb-16">
+                    <h2 class="font-display text-4xl text-white">PROJECTS<span class="text-cyber-cyan">.EXE</span></h2>
+                    <span class="font-mono text-cyber-cyan mb-2">03 // DEPLOYED MODULES</span>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    
+                    <!-- === EDIT PROJECT 1 HERE === -->
+                    <!-- "group" class on parent triggers "group-hover" on children -->
+                    <div class="group relative rounded-lg bg-cyber-dark border border-gray-800 hover:border-cyber-cyan transition-colors overflow-hidden h-[400px]">
+                        <div class="absolute top-0 left-0 w-full h-full">
+                            <img src="https://i.ibb.co/DfcT5VPp/Whats-App-Image-2025-11-26-at-14-07-19-d37b8c6e.jpg" alt="ARES" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 opacity-60 group-hover:opacity-40">
+                        </div>
+                        <div class="absolute inset-0 bg-gradient-to-t from-cyber-black via-cyber-black/80 to-transparent p-6 flex flex-col justify-end">
+                            <!-- Removed transform classes to stop sliding -->
+                            <div>
+                                <div class="flex items-center gap-2 mb-2">
+                                    <i class="fab fa-raspberry-pi text-red-500"></i>
+                                    <span class="font-mono text-xs text-cyber-cyan">PYTHON / RPi</span>
+                                </div>
+                                <h3 class="font-display text-2xl text-white mb-2">ARES ROVER</h3>
+                                
+                                <!-- DESCRIPTION (Always visible now - removed opacity classes) -->
+                                <p class="font-tech text-gray-400 text-sm mb-4">
+                                    Autonomous environmental sensing unit designed for rough terrain navigation and data collection.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- === EDIT PROJECT 2 HERE === -->
+                    <div class="group relative rounded-lg bg-cyber-dark border border-gray-800 hover:border-cyber-cyan transition-colors overflow-hidden h-[400px]">
+                        <div class="absolute top-0 left-0 w-full h-full">
+                            <img src="https://i.ibb.co/FQSSw0Q/Whats-App-Image-2025-12-29-at-22-32-29-5cbea1ee.jpg" alt="Motor" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 opacity-60 group-hover:opacity-40">
+                        </div>
+                        <div class="absolute inset-0 bg-gradient-to-t from-cyber-black via-cyber-black/80 to-transparent p-6 flex flex-col justify-end">
+                            <!-- Removed transform classes to stop sliding -->
+                            <div>
+                                <div class="flex items-center gap-2 mb-2">
+                                    <i class="fas fa-microchip text-cyber-cyan"></i>
+                                    <span class="font-mono text-xs text-cyber-cyan">ARDUINO / C++</span>
+                                </div>
+                                <h3 class="font-display text-2xl text-white mb-2">WIRELESS CONTROL</h3>
+                                
+                                <!-- DESCRIPTION (Always visible now) -->
+                                <p class="font-tech text-gray-400 text-sm mb-4">
+                                    Precision DC Motor control system utilizing IR technology for remote operation and speed modulation.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- === EDIT PROJECT 3 HERE === -->
+                    <div class="group relative rounded-lg bg-cyber-dark border border-gray-800 hover:border-cyber-cyan transition-colors overflow-hidden h-[400px]">
+                        <div class="absolute top-0 left-0 w-full h-full">
+                            <img src="https://i.ibb.co/WY4ymGv/image.png" alt="Genesis" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 opacity-60 group-hover:opacity-40">
+                        </div>
+                        <div class="absolute inset-0 bg-gradient-to-t from-cyber-black via-cyber-black/80 to-transparent p-6 flex flex-col justify-end">
+                            <!-- Removed transform classes to stop sliding -->
+                            <div>
+                                <div class="flex items-center gap-2 mb-2">
+                                    <i class="fab fa-html5 text-orange-500"></i>
+                                    <span class="font-mono text-xs text-cyber-cyan">WEB / STRATEGY</span>
+                                </div>
+                                <h3 class="font-display text-2xl text-white mb-2">PROJECT GENESIS</h3>
+                                
+                                <!-- DESCRIPTION (Always visible now) -->
+                                <p class="font-tech text-gray-400 text-sm mb-4">
+                                    Strategic innovation framework website. Visualizing technical roadmaps and project milestones.
+                                </p>
+                                <a href="https://project-genesis-jiea.b12sites.com/" class="inline-block text-white text-xs font-mono border border-white/20 px-4 py-2 hover:bg-white hover:text-black transition-colors">VIEW CODE</a>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+        <!-- ================= PROJECTS SECTION END ================= -->
+        <!-- CERTIFICATIONS (Enhanced Grid) -->
+        <section id="certifications" class="py-24 px-6 border-t border-white/5 bg-cyber-dark/30">
+            <div class="max-w-7xl mx-auto">
+                <div class="flex flex-col md:flex-row gap-4 items-end mb-16">
+                    <h2 class="font-display text-4xl text-white">CERTIFICATIONS<span class="text-cyber-cyan">.PEM</span></h2>
+                    <span class="font-mono text-cyber-cyan mb-2">04 // VALIDATED CREDENTIALS</span>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <!-- Cert 1 -->
+                    <div class="glass-panel p-6 rounded-lg border border-gray-800 hover:border-cyber-cyan transition-all group">
+                        <div class="flex justify-between items-start mb-4">
+                            <i class="fab fa-google text-3xl text-gray-400 group-hover:text-white transition-colors"></i>
+                            <i class="fas fa-check-circle text-green-500"></i>
+                        </div>
+                        <div class="text-xs font-mono text-cyber-cyan mb-1">GOOGLE CLOUD</div>
+                        <h3 class="font-display text-lg text-white mb-2">Prompt Design in Vertex AI</h3>
+                        <div class="w-full bg-gray-800 h-[1px] my-3"></div>
+                        <a href="https://www.credly.com/badges/a9665d5a-4e2f-4441-965a-678e9998a617/linked_in_profile" class="text-xs font-mono text-gray-400 hover:text-white flex items-center gap-2">
+                            VIEW CREDENTIAL <i class="fas fa-external-link-alt"></i>
+                        </a>
+                    </div>
+
+                    <!-- Cert 2 -->
+                    <div class="glass-panel p-6 rounded-lg border border-gray-800 hover:border-green-500 transition-all group">
+                        <div class="flex justify-between items-start mb-4">
+                            <i class="fas fa-chart-line text-3xl text-gray-400 group-hover:text-white transition-colors"></i>
+                            <i class="fas fa-check-circle text-green-500"></i>
+                        </div>
+                        <div class="text-xs font-mono text-green-400 mb-1">INTERNSHIP STUDIO</div>
+                        <h3 class="font-display text-lg text-white mb-2">Data Analytics Internship</h3>
+                        <div class="w-full bg-gray-800 h-[1px] my-3"></div>
+                        <a href="https://cit2.internshipstudio.com/certificates/validate_certificate.php?verify=ISDTAT380602" class="text-xs font-mono text-gray-400 hover:text-white flex items-center gap-2">
+                            VIEW CREDENTIAL <i class="fas fa-external-link-alt"></i>
+                        </a>
+                    </div>
+
+                    <!-- Cert 3 -->
+                    <div class="glass-panel p-6 rounded-lg border border-gray-800 hover:border-green-500 transition-all group">
+                        <div class="flex justify-between items-start mb-4">
+                            <i class="fas fa-code text-3xl text-gray-400 group-hover:text-white transition-colors"></i>
+                            <i class="fas fa-check-circle text-green-500"></i>
+                        </div>
+                        <div class="text-xs font-mono text-green-400 mb-1">GEEKS FOR GEEKS</div>
+                        <h3 class="font-display text-lg text-white mb-2">Embedded Systems</h3>
+                        <div class="w-full bg-gray-800 h-[1px] my-3"></div>
+                        <a href="https://www.geeksforgeeks.org/certificate/bf108ea40b9b361b349a5b046eee8b13?utm_source=socials&utm_medium=cc_link" class="text-xs font-mono text-gray-400 hover:text-white flex items-center gap-2">
+                            VIEW CREDENTIAL <i class="fas fa-external-link-alt"></i>
+                        </a>
+                    </div>
+
+                    <!-- Cert 4 -->
+                    <div class="glass-panel p-6 rounded-lg border border-gray-800 hover:border-orange-500 transition-all group">
+                        <div class="flex justify-between items-start mb-4">
+                            <i class="fas fa-plane text-3xl text-gray-400 group-hover:text-white transition-colors"></i>
+                            <i class="fas fa-check-circle text-green-500"></i>
+                        </div>
+                        <div class="text-xs font-mono text-orange-400 mb-1">GE AEROSPACE</div>
+                        <h3 class="font-display text-lg text-white mb-2">Explore Engineering Sim</h3>
+                        <div class="w-full bg-gray-800 h-[1px] my-3"></div>
+                        <a href="https://forage-uploads-prod.s3.amazonaws.com/completion-certificates/ay2tsYxaTif7Nt6z7/pLsGxMKDGpsQWt6zZ_ay2tsYxaTif7Nt6z7_pHwC38ty46XJRPrzB_1746375986160_completion_certificate.pdf" class="text-xs font-mono text-gray-400 hover:text-white flex items-center gap-2">
+                            VIEW CREDENTIAL <i class="fas fa-external-link-alt"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+          <!-- CONTACT -->
+        <section id="contact" class="py-24 px-6 bg-gradient-to-b from-transparent to-black">
+            <div class="max-w-3xl mx-auto text-center space-y-8">
+                <h2 class="font-display text-4xl text-white glitch-wrapper" data-text="INITIATE UPLINK">INITIATE UPLINK</h2>
+                <p class="font-tech text-gray-400">
+                    Ready to collaborate on the next generation of hardware solutions? <br>
+                    Transmission lines are open.
+                </p>
+
+                <div class="p-8 border border-gray-800 bg-cyber-dark/80 backdrop-blur-sm rounded-xl max-w-lg mx-auto transform hover:-translate-y-2 transition-transform duration-500 shadow-2xl">
+                    <div class="flex flex-col gap-6">
+                        <!-- === EDIT EMAIL HERE === -->
+                        <a href="mailto:ACHEYUT523PRIME@GMAIL.COM" class="flex items-center gap-4 p-4 border border-white/10 rounded-lg hover:border-cyber-cyan hover:bg-cyber-cyan/10 transition-all group">
+                            <div class="w-10 h-10 bg-gray-800 rounded-full flex items-center justify-center text-cyber-cyan group-hover:bg-cyber-cyan group-hover:text-black transition-colors">
+                                <i class="fas fa-envelope"></i>
+                            </div>
+                            <div class="text-left">
+                                <div class="text-xs text-gray-500 font-mono">EMAIL</div>
+                                <div class="text-white font-tech tracking-wide">ACHEYUT523PRIME@GMAIL.COM ACHYUT94563@GMAIL.COM</div>
+                            </div>
+                        </a>
+                        
+                        <!-- === EDIT PHONE HERE === -->
+                        <div class="flex items-center gap-4 p-4 border border-white/10 rounded-lg hover:border-cyber-cyan hover:bg-cyber-cyan/10 transition-all group">
+                            <div class="w-10 h-10 bg-gray-800 rounded-full flex items-center justify-center text-cyber-cyan group-hover:bg-cyber-cyan group-hover:text-black transition-colors">
+                                <i class="fas fa-phone"></i>
+                            </div>
+                            <div class="text-left">
+                                <div class="text-xs text-gray-500 font-mono">PHONE</div>
+                                <div class="text-white font-tech tracking-wide">+91 7981258307, +91 9492663302</div>
+                            </div>
+                        </div>
+
+                        <!-- === INSTAGRAM LINK ADDED HERE === -->
+                        <a href="https://www.instagram.com/ac__385_hv?utm_source=qr&igsh=MXZlNHYzNmE0dGt6dQ==" target="_blank" class="flex items-center gap-4 p-4 border border-white/10 rounded-lg hover:border-cyber-purple hover:bg-cyber-purple/10 transition-all group">
+                            <div class="w-10 h-10 bg-gray-800 rounded-full flex items-center justify-center text-cyber-purple group-hover:bg-cyber-purple group-hover:text-black transition-colors">
+                                <i class="fab fa-instagram"></i>
+                            </div>
+                            <div class="text-left">
+                                <div class="text-xs text-gray-500 font-mono">INSTAGRAM</div>
+                                <div class="text-white font-tech tracking-wide">AC__385_HV</div>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+
+        <!-- FOOTER -->
+        <footer class="border-t border-white/10 py-8 text-center bg-black relative z-10">
+            <div class="font-mono text-xs text-gray-600">
+                SYSTEM STATUS: <span class="text-green-500">OPTIMAL</span> <br>
+                DESIGNED BY ACHYUT HEYGRIV &copy; 2025
+            </div>
+        </footer>
+
+    </main>
+
+    <!-- SCRIPTS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+
+    <!-- MAIN SCRIPT (Module) -->
+    <script type="module">
+        import { Renderer, Transform, Vec3, Color, Polyline } from 'https://cdn.skypack.dev/ogl';
+
+        // --- 1. RIBBON CURSOR LOGIC ---
+        const initRibbonCursor = () => {
+            const container = document.getElementById('ribbon-container');
+            if (!container) return;
+
+            // Ribbon Config
+            const colors = ['#00f3ff', '#bd00ff', '#00f3ff']; // Cyber Cyan & Purple
+            const baseSpring = 0.05;
+            const baseFriction = 0.85;
+            const baseThickness = 15;
+            const offsetFactor = 0.05;
+            const maxAge = 500;
+            const pointCount = 40;
+            const speedMultiplier = 0.6;
+
+            const renderer = new Renderer({ dpr: window.devicePixelRatio || 2, alpha: true });
+            const gl = renderer.gl;
+            
+            gl.canvas.style.position = 'absolute';
+            gl.canvas.style.top = '0';
+            gl.canvas.style.left = '0';
+            gl.canvas.style.width = '100%';
+            gl.canvas.style.height = '100%';
+            container.appendChild(gl.canvas);
+
+            const scene = new Transform();
+            const lines = [];
+
+            const vertex = `
+                precision highp float;
+                attribute vec3 position;
+                attribute vec3 next;
+                attribute vec3 prev;
+                attribute vec2 uv;
+                attribute float side;
+                uniform vec2 uResolution;
+                uniform float uDPR;
+                uniform float uThickness;
+                uniform float uTime;
+                varying vec2 vUV;
+                
+                vec4 getPosition() {
+                    vec4 current = vec4(position, 1.0);
+                    vec2 aspect = vec2(uResolution.x / uResolution.y, 1.0);
+                    vec2 nextScreen = next.xy * aspect;
+                    vec2 prevScreen = prev.xy * aspect;
+                    vec2 tangent = normalize(nextScreen - prevScreen);
+                    vec2 normal = vec2(-tangent.y, tangent.x);
+                    normal /= aspect;
+                    normal *= mix(1.0, 0.1, pow(abs(uv.y - 0.5) * 2.0, 2.0));
+                    float dist = length(nextScreen - prevScreen);
+                    normal *= smoothstep(0.0, 0.02, dist);
+                    float pixelWidthRatio = 1.0 / (uResolution.y / uDPR);
+                    float pixelWidth = current.w * pixelWidthRatio;
+                    normal *= pixelWidth * uThickness;
+                    current.xy -= normal * side;
+                    return current;
+                }
+                
+                void main() {
+                    vUV = uv;
+                    gl_Position = getPosition();
+                }
+            `;
+
+            const fragment = `
+                precision highp float;
+                uniform vec3 uColor;
+                uniform float uOpacity;
+                varying vec2 vUV;
+                void main() {
+                    gl_FragColor = vec4(uColor, uOpacity);
+                }
+            `;
+
+            function resize() {
+                const width = window.innerWidth;
+                const height = window.innerHeight;
+                renderer.setSize(width, height);
+                lines.forEach(line => line.polyline.resize());
+            }
+            window.addEventListener('resize', resize);
+
+            const center = (colors.length - 1) / 2;
+            
+            colors.forEach((color, index) => {
+                const spring = baseSpring + (Math.random() - 0.5) * 0.05;
+                const friction = baseFriction + (Math.random() - 0.5) * 0.05;
+                const thickness = baseThickness + (Math.random() - 0.5) * 3;
+                const mouseOffset = new Vec3(
+                    (index - center) * offsetFactor + (Math.random() - 0.5) * 0.01,
+                    (Math.random() - 0.5) * 0.1,
+                    0
+                );
+
+                const line = {
+                    spring,
+                    friction,
+                    mouseVelocity: new Vec3(),
+                    mouseOffset
+                };
+
+                const count = pointCount;
+                const points = [];
+                for (let i = 0; i < count; i++) {
+                    points.push(new Vec3());
+                }
+                line.points = points;
+
+                line.polyline = new Polyline(gl, {
+                    points,
+                    vertex,
+                    fragment,
+                    uniforms: {
+                        uColor: { value: new Color(color) },
+                        uThickness: { value: thickness },
+                        uOpacity: { value: 1.0 },
+                        uTime: { value: 0.0 }
+                    }
+                });
+                line.polyline.mesh.setParent(scene);
+                lines.push(line);
+            });
+
+            resize();
+
+            const mouse = new Vec3();
+            function updateMouse(e) {
+                let x, y;
+                if (e.changedTouches && e.changedTouches.length) {
+                    x = e.changedTouches[0].clientX;
+                    y = e.changedTouches[0].clientY;
+                } else {
+                    x = e.clientX;
+                    y = e.clientY;
+                }
+                const width = window.innerWidth;
+                const height = window.innerHeight;
+                mouse.set((x / width) * 2 - 1, (y / height) * -2 + 1, 0);
+            }
+            
+            window.addEventListener('mousemove', updateMouse);
+            window.addEventListener('touchstart', updateMouse);
+            window.addEventListener('touchmove', updateMouse);
+
+            const tmp = new Vec3();
+            let lastTime = performance.now();
+
+            function update() {
+                requestAnimationFrame(update);
+                const currentTime = performance.now();
+                const dt = currentTime - lastTime;
+                lastTime = currentTime;
+
+                lines.forEach(line => {
+                    tmp.copy(mouse).add(line.mouseOffset).sub(line.points[0]).multiply(line.spring);
+                    line.mouseVelocity.add(tmp).multiply(line.friction);
+                    line.points[0].add(line.mouseVelocity);
+
+                    for (let i = 1; i < line.points.length; i++) {
+                        if (isFinite(maxAge) && maxAge > 0) {
+                            const segmentDelay = maxAge / (line.points.length - 1);
+                            const alpha = Math.min(1, (dt * speedMultiplier) / segmentDelay);
+                            line.points[i].lerp(line.points[i - 1], alpha);
+                        } else {
+                            line.points[i].lerp(line.points[i - 1], 0.9);
+                        }
+                    }
+                    if (line.polyline.mesh.program.uniforms.uTime) {
+                        line.polyline.mesh.program.uniforms.uTime.value = currentTime * 0.001;
+                    }
+                    line.polyline.updateGeometry();
+                });
+
+                renderer.render({ scene });
+            }
+            update();
+        };
+
+        // --- 2. BOOT SEQUENCE ---
+        const progressBar = document.getElementById('progress-bar');
+        const loaderText = document.getElementById('loader-text');
+        const loader = document.getElementById('loader');
+
+        let progress = 0;
+        const interval = setInterval(() => {
+            progress += Math.random() * 5;
+            if (progress > 100) progress = 100;
+            if (progressBar) progressBar.style.width = `${progress}%`;
+            
+            if (loaderText) {
+                if(progress < 30) loaderText.innerText = "LOADING KERNEL...";
+                else if(progress < 60) loaderText.innerText = "INITIALIZING 3D ENGINE...";
+                else if(progress < 90) loaderText.innerText = "LOADING ASSETS...";
+                else loaderText.innerText = "SYSTEM READY";
+            }
+
+            if (progress === 100) {
+                clearInterval(interval);
+                if (loader) {
+                    gsap.to(loader, {
+                        yPercent: -100,
+                        duration: 1,
+                        ease: "power4.inOut",
+                        delay: 0.5,
+                        onComplete: startExperience
+                    });
+                }
+            }
+        }, 50);
+
+        function startExperience() {
+            gsap.from("h1", { opacity: 0, y: 50, duration: 1, delay: 0.2 });
+            gsap.from(".font-tech", { opacity: 0, x: -50, duration: 1, delay: 0.4 });
+        }
+
+        // --- 3. TYPING EFFECT (UPDATED FOR LINKEDIN PROFILE) ---
+        const words = ["Automobile Engineering.", "Aerospace Engineering.", "Embedded Systems.", "IoT Architectures."];
+        let i = 0;
+
+        function typeWriter() {
+            const heading = document.getElementById("typing-text");
+            if(!heading) return;
+            let n = 0;
+            
+            function type() {
+                const word = words[i]; // Fetch current word dynamically
+                if (n < word.length) {
+                    heading.textContent = word.substring(0, n + 1);
+                    n++;
+                    setTimeout(type, 100);
+                } else {
+                    setTimeout(erase, 2000);
+                }
+            }
+
+            function erase() {
+                const word = words[i]; // Fetch current word dynamically
+                if (n > 0) {
+                    heading.textContent = word.substring(0, n - 1);
+                    n--;
+                    setTimeout(erase, 50);
+                } else {
+                    i = (i + 1) % words.length;
+                    n = 0;
+                    type();
+                }
+            }
+            type();
+        }
+
+        // --- 4. THREE.JS BACKGROUND ---
+        function initThreeJS() {
+            const canvas = document.getElementById('webgl-canvas');
+            if(!canvas) return;
+            const scene = new THREE.Scene();
+            const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            const renderer = new THREE.WebGLRenderer({ canvas: canvas, alpha: true, antialias: true });
+            
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+            const geometry = new THREE.IcosahedronGeometry(2, 0);
+            const material = new THREE.MeshBasicMaterial({ color: 0x00f3ff, wireframe: true, transparent: true, opacity: 0.3 });
+            const core = new THREE.Mesh(geometry, material);
+            scene.add(core);
+
+            const particlesGeometry = new THREE.BufferGeometry();
+            const particlesCount = 700;
+            const posArray = new Float32Array(particlesCount * 3);
+
+            for(let j = 0; j < particlesCount * 3; j++) {
+                posArray[j] = (Math.random() - 0.5) * 15; 
+            }
+
+            particlesGeometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
+            const particlesMaterial = new THREE.PointsMaterial({
+                size: 0.03,
+                color: 0x00f3ff,
+                transparent: true,
+                opacity: 0.8
+            });
+            const particlesMesh = new THREE.Points(particlesGeometry, particlesMaterial);
+            scene.add(particlesMesh);
+
+            camera.position.z = 5;
+
+            let mouseX = 0;
+            let mouseY = 0;
+
+            document.addEventListener('mousemove', (event) => {
+                mouseX = event.clientX / window.innerWidth - 0.5;
+                mouseY = event.clientY / window.innerHeight - 0.5;
+            });
+
+            function animate() {
+                requestAnimationFrame(animate);
+                core.rotation.x += 0.002;
+                core.rotation.y += 0.002;
+                particlesMesh.rotation.y = -mouseX * 0.5;
+                particlesMesh.rotation.x = -mouseY * 0.5;
+                camera.position.y = -window.scrollY * 0.002;
+                renderer.render(scene, camera);
+            }
+            animate();
+
+            window.addEventListener('resize', () => {
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+            });
+        }
+
+        // --- 5. MOBILE NAV ---
+        window.toggleMobileNav = function() {
+            const nav = document.querySelector('nav div.hidden');
+            if(nav) {
+                nav.classList.remove('hidden');
+                nav.classList.add('flex', 'flex-col', 'absolute', 'top-full', 'left-0', 'w-full', 'bg-black', 'p-6');
+            } else {
+                const openNav = document.querySelector('nav div.flex-col');
+                openNav.classList.add('hidden');
+                openNav.classList.remove('flex', 'flex-col', 'absolute', 'top-full', 'left-0', 'w-full', 'bg-black', 'p-6');
+            }
+        };
+
+        // --- 6. SCROLL ANIMATIONS ---
+        function initScrollAnimations() {
+            gsap.registerPlugin(ScrollTrigger);
+            gsap.utils.toArray('.glass-panel').forEach(panel => {
+                gsap.from(panel, {
+                    scrollTrigger: {
+                        trigger: panel,
+                        start: "top 85%",
+                        toggleActions: "play none none reverse"
+                    },
+                    y: 50,
+                    opacity: 0,
+                    duration: 0.8,
+                    ease: "power2.out"
+                });
+            });
+        }
+
+        // --- INITIALIZATION ---
+        initRibbonCursor();
+        initThreeJS();
+        typeWriter();
+        initScrollAnimations();
+
+    </script>
+</body>
+</html>
